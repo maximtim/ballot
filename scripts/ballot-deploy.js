@@ -1,16 +1,15 @@
 const hre = require("hardhat");
+const ethers = hre.ethers;
 
 async function main() {
+  var argv = require('minimist')(process.argv.slice(2));
+  console.log(argv);
+
   await hre.run('compile');
-
-  const [deployer, first, second] = await hre.ethers.getSigners();
-
-  const Ballot = await hre.ethers.getContractFactory("Ballot", deployer);
-  const ballot = await Ballot.deploy([ first.address, second.address ]);
-
-  await ballot.deployed();
-
-  console.log("Ballot deployed to:", ballot.address);
+  await hre.run('ballot-create', { 
+    sender: argv['owner'].toString(), 
+    candidates: argv['candidates'].toString()
+  });
 }
 
 main()
