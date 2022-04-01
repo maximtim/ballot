@@ -105,6 +105,7 @@ task("ballot-close", "Close ballot")
     const txRes = await closeTx.wait();
 
     console.log("Sender: ", await senderSigner.getAddress());
+    console.log("Winner: ", await ballot.winner());
     const gasCost = txRes.gasUsed.mul(txRes.effectiveGasPrice);
     console.log("Gas cost: ", formatEther(gasCost), "ETH");
   });
