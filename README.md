@@ -11,7 +11,14 @@
 - add-days
 - balance
 
-To work in rinkeby use "--network rinkeby".
+Users addresses can be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..), for example:
+```
+> npx hardhat ballot-create --sender 1 --candidates 0,2
+```
+
+To work in rinkeby add "--network rinkeby" in task commands. To test locally, run "npx hardhat node", then use "--network localhost"
+
+You can execute "add-days --days 3" to be able to close ballot quickly
 
 "add-days" works only on hardhat node
 
@@ -19,7 +26,7 @@ To work in rinkeby use "--network rinkeby".
 
 - Windows:
 
-Addresses can be indexes of used accounts from PRIVATE_KEYS_LIST (0,1,2..)
+Addresses can be indexes of accounts from PRIVATE_KEYS_LIST as well
 ```
 > $env:HARDHAT_NETWORK='rinkeby'
 > node .\scripts\ballot-deploy.js --owner addr0 --candidates addr1,addr2,...
@@ -33,6 +40,6 @@ Addresses can be indexes of used accounts from PRIVATE_KEYS_LIST (0,1,2..)
 #### 4) .env settings:
 ```
 PROJECT_URL="https://rinkeby.infura.io/v3/<project id here>"
-PRIVATE_KEYS_LIST=["pk0","pk1","pk2",...]
+PRIVATE_KEYS_LIST=["<pk0>","<pk1>","<pk2>",...]
 ```
 
