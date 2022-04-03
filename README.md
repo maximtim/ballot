@@ -15,7 +15,7 @@ User creates ballot contract with candidates addresses as parameters, and become
 
 Add "--help" to these commands to see explanations.
 
-Users addresses can be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..), for example:
+Users addresses can also be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..), for example:
 ```
 > npx hardhat ballot-create --sender 1 --candidates 0,2
 ```
@@ -30,7 +30,7 @@ You can execute "add-days --days 3" to be able to close ballot quickly
 
 - Windows:
 
-Addresses can be indexes of accounts from PRIVATE_KEYS_LIST as well
+Addresses can also be indexes of accounts from PRIVATE_KEYS_LIST as well
 ```
 > $env:HARDHAT_NETWORK='rinkeby'
 > node .\scripts\ballot-deploy.js --owner addr0 --candidates addr1,addr2,...
