@@ -1,5 +1,7 @@
 ## Test task: ballot smart contract
 
+User creates ballot contract with candidates addresses as parameters, and becomes owner. Everybody can vote for any of given candidates, but they have to pay 0.1 ETH for their vote request. One can vote only once. Ballot lasts 3 days, then any user can close it by request. Candidate with the highest number of votes (or one of equally highest) gets 90% of accumulated bank and withdraws his prize. Owner withdraws 10% of bank as commission.
+
 #### 1) Hardhat tasks:
 - ballot-create
 - ballot-vote
@@ -10,6 +12,8 @@
 - accounts
 - add-days
 - balance
+
+Add "--help" to these commands to see explanations.
 
 Users addresses can be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..), for example:
 ```
