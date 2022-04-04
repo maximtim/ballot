@@ -1,23 +1,23 @@
 ## Test task: ballot smart contract
 
-User creates ballot contract with candidates addresses as parameters, and becomes owner. Everybody can vote for any of given candidates, but they have to pay 0.1 ETH for their vote request. One can vote only once. Ballot lasts 3 days, then any user can close it by request. Candidate with the highest number of votes (or one of equally highest) gets 90% of accumulated bank and withdraws his prize. Owner withdraws 10% of bank as commission.
+Contract owner can create various votings with title to identify and candidates to give votes to. Votings can run simultaneously. Everybody can vote for any of given candidates in any voting, but they have to pay 0.1 ETH for their vote request. One can vote only once per voting. Voting lasts 3 days, then any user can close it by request. Candidate with the highest number of votes (or one of equally highest) gets 90% of accumulated voting bank and withdraws his prize. Owner withdraws 10% of bank as commission.
 
 #### 1) Hardhat tasks:
-- ballot-create
-- ballot-vote
-- ballot-close
-- ballot-withdraw
-- ballot-get-user
-- ballot-show
-- accounts
-- add-days
-- balance
+-  ballot-close-voting           Close voting
+-  ballot-create-voting          Create new voting from Ballot contract.
+-  ballot-deploy                 Deploy new Ballot contract.
+-  ballot-get-balance            Shows user's locked money that he can withdraw
+-  ballot-get-user               Prints voting user info
+-  ballot-show-voting-info       Prints some of voting properties
+-  ballot-show-votings           Prints all votings names
+-  ballot-vote                   Vote for a candidate of given voting
+-  ballot-withdraw               Withdraw money from contract
 
 Add "--help" to these commands to see explanations.
 
 Users addresses can also be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..), for example:
 ```
-> npx hardhat ballot-create --sender 1 --candidates 0,2
+> npx hardhat ballot-deploy --sender 1
 ```
 
 To work in rinkeby add "--network rinkeby" in task commands. To test locally, run "npx hardhat node", then use "--network localhost"
@@ -33,11 +33,11 @@ You can execute "add-days --days 3" to be able to close ballot quickly
 Addresses can also be indexes of accounts from PRIVATE_KEYS_LIST as well
 ```
 > $env:HARDHAT_NETWORK='rinkeby'
-> node .\scripts\ballot-deploy.js --owner addr0 --candidates addr1,addr2,...
+> node .\scripts\ballot-deploy.js --owner <addr>
 ```
 - Linux: 
 ```
->  HARDHAT_NETWORK=rinkeby node .\scripts\ballot-deploy.js --owner addr0 --candidates addr1,addr2
+>  HARDHAT_NETWORK=rinkeby node .\scripts\ballot-deploy.js --owner <addr>
 ```
 
 #### 3) Tests (solidity-coverage 100%)
