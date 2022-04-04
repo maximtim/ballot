@@ -3,15 +3,17 @@
 Contract owner can create various votings with title to identify and candidates to give votes to. Votings can run simultaneously. Everybody can vote for any of given candidates in any voting, but they have to pay 0.1 ETH for their vote request. One can vote only once per voting. Voting lasts 3 days, then any user can close it by request. Candidate with the highest number of votes (or one of equally highest) gets 90% of accumulated voting bank and withdraws his prize. Owner withdraws 10% of bank as commission.
 
 #### 1) Hardhat tasks:
--  ballot-close-voting           Close voting
--  ballot-create-voting          Create new voting from Ballot contract.
--  ballot-deploy                 Deploy new Ballot contract.
--  ballot-get-balance            Shows user's locked money that he can withdraw
--  ballot-get-user               Prints voting user info
--  ballot-show-voting-info       Prints some of voting properties
--  ballot-show-votings           Prints all votings names
--  ballot-vote                   Vote for a candidate of given voting
--  ballot-withdraw               Withdraw money from contract
+|Command|Description|
+|---------------------------------|-------------------------------------------------|
+| -  ballot-deploy                | Deploy new Ballot contract. |
+| -  ballot-create-voting         | Create new voting from Ballot contract. |
+| -  ballot-vote                  | Vote for a candidate of given voting |
+| -  ballot-close-voting          | Close voting |
+| -  ballot-withdraw              | Withdraw money from contract |
+| -  ballot-get-balance           | Shows user's locked money that he can withdraw |
+| -  ballot-get-user              | Prints voting user info |
+| -  ballot-show-voting-info      | Prints some of voting properties |
+| -  ballot-show-votings          | Prints all votings names |
 
 Add "--help" to these commands to see explanations.
 
