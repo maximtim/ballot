@@ -21,6 +21,7 @@ Users addresses can also be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..)
 ```
 > npx hardhat ballot-deploy --sender 1
 ```
+You can assign CONTRACT_ADDRESS variable in .env to skip "--address" argument in tasks.
 
 To work in rinkeby add "--network rinkeby" in task commands. To test locally, run "npx hardhat node", then use "--network localhost"
 
@@ -47,5 +48,6 @@ Addresses can also be indexes of accounts from PRIVATE_KEYS_LIST as well
 ```
 PROJECT_URL="https://rinkeby.infura.io/v3/<project id here>"
 PRIVATE_KEYS_LIST=["<pk0>","<pk1>","<pk2>",...]
+CONTRACT_ADDRESS="<deployed address>"
 ```
 
