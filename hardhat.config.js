@@ -60,7 +60,7 @@ task("ballot-deploy", "Deploy new Ballot contract.")
   });
 
 task("ballot-create-voting", "Create new voting from Ballot contract.")
-  .addParam("address", "Ballot contract's address")
+  .addOptionalParam("address", "Ballot contract's address", process.env.CONTRACT_ADDRESS)
   .addParam("sender", "Sender's address (must be owner). All user addresses are addressOrIndex type")
   .addParam("title", "Voting identity title (any string)")
   .addParam("candidates", "Candidates addresses (comma separated)")
@@ -93,7 +93,7 @@ task("ballot-create-voting", "Create new voting from Ballot contract.")
   });
 
 task("ballot-vote", "Vote for a candidate")
-  .addParam("address", "Ballot contract's address")
+  .addOptionalParam("address", "Ballot contract's address", process.env.CONTRACT_ADDRESS)
   .addParam("title", "Voting title")
   .addParam("sender", "Voter's address")
   .addParam("candidate", "The candidate's address")
@@ -117,7 +117,7 @@ task("ballot-vote", "Vote for a candidate")
   });
 
 task("ballot-close-voting", "Close voting")
-  .addParam("address", "Ballot contract's address")
+  .addOptionalParam("address", "Ballot contract's address", process.env.CONTRACT_ADDRESS)
   .addParam("title", "Voting title")
   .addParam("sender", "Address of tx sender (who closes)")
   .setAction(async ({ address, title, sender }, { ethers }) => {
@@ -138,7 +138,7 @@ task("ballot-close-voting", "Close voting")
   });
 
 task("ballot-withdraw", "Withdraw money from contract")
-  .addParam("address", "Ballot contract's address")
+  .addOptionalParam("address", "Ballot contract's address", process.env.CONTRACT_ADDRESS)
   .addParam("sender", "Address of tx sender (receives money)")
   .setAction(async ({ address, sender }, { ethers }) => {
     const ballot = await ethers.getContractAt("Ballot", address);
@@ -161,7 +161,7 @@ task("ballot-withdraw", "Withdraw money from contract")
   });
 
 task("ballot-show-voting-info", "Prints some of voting properties")
-  .addParam("address", "The contract's address")
+  .addOptionalParam("address", "The contract's address", process.env.CONTRACT_ADDRESS)
   .addParam("title", "Voting title")
   .setAction(async ({ address, title }, { ethers }) => {
     const contract = await ethers.getContractAt("Ballot", address);
@@ -177,7 +177,7 @@ task("ballot-show-voting-info", "Prints some of voting properties")
   });
 
 task("ballot-show-votings", "Prints all votings names")
-  .addParam("address", "The contract's address")
+  .addOptionalParam("address", "The contract's address", process.env.CONTRACT_ADDRESS)
   .setAction(async ({ address }, { ethers }) => {
     const contract = await ethers.getContractAt("Ballot", address);
     const names = await contract.getVotingsNames();
@@ -186,17 +186,19 @@ task("ballot-show-votings", "Prints all votings names")
   });
 
 task("ballot-get-balance", "Shows user's locked money that he can withdraw")
-  .addParam("address", "The contract's address")
+  .addOptionalParam("address", "The contract's address", process.env.CONTRACT_ADDRESS)
   .addParam("sender", "Tx sender address")
   .setAction(async ({ address, sender }, { ethers }) => {
-    const contract = await ethers.getContractAt("Ballot", address);
-    const balance = await contract.getBalance(sender);
+    const senderSigner = ethers.provider.getSigner(parseAddressOrIndex(ethers, sender));
 
-    console.log("Balance: ", balance);
+    const contract = await ethers.getContractAt("Ballot", address);
+    const balance = await contract.getBalance(await senderSigner.getAddress());
+
+    console.log("Balance: ", balance.toNumber());
   });
 
 task("ballot-get-user", "Prints voting user info")
-  .addParam("address", "The contract's address")
+  .addOptionalParam("address", "The contract's address", process.env.CONTRACT_ADDRESS)
   .addParam("title", "Voting title")
   .addParam("user", "User's address")
   .setAction(async ({ address, title, user }, { ethers }) => {
