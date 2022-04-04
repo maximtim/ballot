@@ -17,7 +17,7 @@ Contract owner can create various votings with title to identify and candidates 
 
 Add "--help" to these commands to see explanations.
 
-Users addresses can also be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..), for example:
+Users addresses can also be indexes of accounts from PRIVATE_KEYS_LIST (0,1,2..) (or from hardhat test accounts list), for example:
 ```
 > npx hardhat ballot-deploy --sender 1
 ```
