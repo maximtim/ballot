@@ -3,12 +3,10 @@ const ethers = hre.ethers;
 
 async function main() {
   var argv = require('minimist')(process.argv.slice(2));
-  console.log(argv);
 
   await hre.run('compile');
-  await hre.run('ballot-create', { 
-    sender: argv['owner'].toString(), 
-    candidates: argv['candidates'].toString()
+  await hre.run('ballot-deploy', { 
+    sender: argv['owner'].toString()
   });
 }
 

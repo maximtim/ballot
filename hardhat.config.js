@@ -25,6 +25,7 @@ task("add-days", "Adds given number of days to next block timestamp")
   .addParam("days", "Days to add")
   .setAction(async ({ days }, { ethers }) => {
     await ethers.provider.send("evm_increaseTime", [86400 * days]);
+    //await ethers.provider.send("evm_mine");
     console.log("Done.");
   });
 
@@ -39,12 +40,35 @@ function parseAddressOrIndex(ethers, input) {
   }
 }
 
-task("ballot-create", "Create new ballot from Ballot contract.")
-  .addParam("sender", "Creator's address (will be owner). All user addresses are addressOrIndex type")
-  .addParam("candidates", "Candidates addresses (comma separated)")
+task("ballot-deploy", "Deploy new Ballot contract.")
+  .addParam("sender", "Sender's address (will be owner). All user addresses are addressOrIndex type")
   .setAction(async (
     {
       sender,
+    }, 
+    { ethers }
+  ) => {
+    const ownerSigner = ethers.provider.getSigner(parseAddressOrIndex(ethers, sender));
+    const Ballot = await ethers.getContractFactory("Ballot", ownerSigner);
+    const ballot = await Ballot.deploy();
+    const txRes = await ((await ballot.deployed()).deployTransaction).wait();
+
+    console.log("Owner: ", await ownerSigner.getAddress());
+    const gasCost = txRes.gasUsed.mul(txRes.effectiveGasPrice);
+    console.log("Gas cost: ", formatEther(gasCost), "ETH");
+    console.log("Ballot deployed to: ", ballot.address);
+  });
+
+task("ballot-create-voting", "Create new voting from Ballot contract.")
+  .addParam("address", "Ballot contract's address")
+  .addParam("sender", "Sender's address (must be owner). All user addresses are addressOrIndex type")
+  .addParam("title", "Voting identity title (any string)")
+  .addParam("candidates", "Candidates addresses (comma separated)")
+  .setAction(async (
+    {
+      address,
+      sender,
+      title,
       candidates
     }, 
     { ethers }
@@ -55,26 +79,26 @@ task("ballot-create", "Create new ballot from Ballot contract.")
       .map(async (addr) => await ethers.provider
         .getSigner(parseAddressOrIndex(ethers, addr))
         .getAddress());
-    
     const candidatesAddrs = await Promise.all(candidatesPromises);
     
-    const Ballot = await ethers.getContractFactory("Ballot", ownerSigner);
-    const ballot = await Ballot.deploy(candidatesAddrs);
-    const txRes = await ((await ballot.deployed()).deployTransaction).wait();
+    const ballot = await ethers.getContractAt("Ballot", address);
 
-    console.log("Owner: ", await ownerSigner.getAddress());
+    const createTx = await ballot.connect(ownerSigner).createVoting(title, candidatesAddrs);
+    const txRes = await createTx.wait();
+
     const gasCost = txRes.gasUsed.mul(txRes.effectiveGasPrice);
     console.log("Gas cost: ", formatEther(gasCost), "ETH");
+    console.log("Title: ", title);
     console.log("Candidates: ", candidatesAddrs);
-    console.log("Ballot deployed to: ", ballot.address);
   });
 
 task("ballot-vote", "Vote for a candidate")
   .addParam("address", "Ballot contract's address")
+  .addParam("title", "Voting title")
   .addParam("sender", "Voter's address")
   .addParam("candidate", "The candidate's address")
   .addParam("payment", "Payment to vote in ETH (requires 0.1 ETH)")
-  .setAction(async ({ address, sender, candidate, payment }, { ethers }) => {
+  .setAction(async ({ address, title, sender, candidate, payment }, { ethers }) => {
     const ballot = await ethers.getContractAt("Ballot", address);
     
     const voterSigner = ethers.provider.getSigner(parseAddressOrIndex(ethers, sender));
@@ -82,30 +106,33 @@ task("ballot-vote", "Vote for a candidate")
 
     const voteTx = await ballot
         .connect(voterSigner)
-        .vote(await candidateSigner.getAddress(), { value : parseEther(payment) });
+        .vote(title, await candidateSigner.getAddress(), { value : parseEther(payment) });
     const txRes = await voteTx.wait();
 
     console.log("Voter: ", await voterSigner.getAddress());
     console.log("Voted for candidate: ", await candidateSigner.getAddress());
+    console.log("In voting: ", title);
     const gasCost = txRes.gasUsed.mul(txRes.effectiveGasPrice);
     console.log("Gas cost: ", formatEther(gasCost), "ETH");
   });
 
-task("ballot-close", "Close ballot")
+task("ballot-close-voting", "Close voting")
   .addParam("address", "Ballot contract's address")
+  .addParam("title", "Voting title")
   .addParam("sender", "Address of tx sender (who closes)")
-  .setAction(async ({ address, sender }, { ethers }) => {
+  .setAction(async ({ address, title, sender }, { ethers }) => {
     const ballot = await ethers.getContractAt("Ballot", address);
 
     const senderSigner = ethers.provider.getSigner(parseAddressOrIndex(ethers, sender));
 
     const closeTx = await ballot
         .connect(senderSigner)
-        .closeBallot();
+        .closeVoting(title);
     const txRes = await closeTx.wait();
 
     console.log("Sender: ", await senderSigner.getAddress());
-    console.log("Winner: ", await ballot.winner());
+    console.log("Winner: ", (await ballot.getVotingSummary(title)).winner);
+    console.log("Of voting: ", title);
     const gasCost = txRes.gasUsed.mul(txRes.effectiveGasPrice);
     console.log("Gas cost: ", formatEther(gasCost), "ETH");
   });
@@ -133,29 +160,51 @@ task("ballot-withdraw", "Withdraw money from contract")
     console.log("Received: ", formatEther(received), "ETH");
   });
 
-task("ballot-show", "Prints some of Ballot contract's properties")
+task("ballot-show-voting-info", "Prints some of voting properties")
+  .addParam("address", "The contract's address")
+  .addParam("title", "Voting title")
+  .setAction(async ({ address, title }, { ethers }) => {
+    const contract = await ethers.getContractAt("Ballot", address);
+    const info = await contract.getVotingSummary(title);
+
+    console.log("contract owner: ", await contract.owner(), "\n",
+                "winner: ", info.winner, "\n",
+                "bank: ", formatEther(info.bank), "ETH", "\n",
+                "closed: ", info.closed, "\n",
+                "endTime: ", new Date((info.endTime).toNumber() * 1000).toDateString(), "\n",
+                "candidates: ", info.candidates, "\n",
+                "contract address: ", contract.address);
+  });
+
+task("ballot-show-votings", "Prints all votings names")
   .addParam("address", "The contract's address")
   .setAction(async ({ address }, { ethers }) => {
     const contract = await ethers.getContractAt("Ballot", address);
+    const names = await contract.getVotingsNames();
 
-    console.log("owner: ", await contract.owner(), "\n",
-                "winner: ", await contract.winner(), "\n",
-                "bank: ", formatEther(await contract.bank()), "ETH", "\n",
-                "closed: ", await contract.closed(), "\n",
-                "endTime: ", new Date((await contract.endTime()).toNumber() * 1000).toDateString(), "\n",
-                "candidates: ", await contract.getCandidates(), "\n",
-                "address: ", contract.address);
+    console.log("Votings: ", names);
   });
 
-task("ballot-get-user", "Prints ballot's user info")
+task("ballot-get-balance", "Shows user's locked money that he can withdraw")
   .addParam("address", "The contract's address")
+  .addParam("sender", "Tx sender address")
+  .setAction(async ({ address, sender }, { ethers }) => {
+    const contract = await ethers.getContractAt("Ballot", address);
+    const balance = await contract.getBalance(sender);
+
+    console.log("Balance: ", balance);
+  });
+
+task("ballot-get-user", "Prints voting user info")
+  .addParam("address", "The contract's address")
+  .addParam("title", "Voting title")
   .addParam("user", "User's address")
-  .setAction(async ({ address, user }, { ethers }) => {
+  .setAction(async ({ address, title, user }, { ethers }) => {
     const ballot = await ethers.getContractAt("Ballot", address);
 
     const userSigner = ethers.provider.getSigner(parseAddressOrIndex(ethers, user));
 
-    const [voted, isCandidate, scoredVotes] = await ballot.getUser(await userSigner.getAddress());
+    const [voted, isCandidate, scoredVotes] = await ballot.getVotingUserInfo(title, await userSigner.getAddress());
     console.log("voted:", voted, "\n",
                 "isCandidate:", isCandidate, "\n",
                 "scoredVotes:", scoredVotes.toNumber());
