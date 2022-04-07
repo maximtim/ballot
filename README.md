@@ -1,6 +1,6 @@
 ## Test task: ballot smart contract
 
-Contract owner can create various votings with title to identify and candidates to give votes to. Votings can run simultaneously. Everybody can vote for any of given candidates in any voting, but they have to pay 0.1 ETH for their vote request. One can vote only once per voting. Voting lasts 3 days, then any user can close it by request. Candidate with the highest number of votes (or one of equally highest) gets 90% of accumulated voting bank and withdraws his prize. Owner withdraws 10% of bank as commission.
+Contract owner can create various votings with title to identify and candidates to give votes to. Votings can run simultaneously. Everybody can vote for any of given candidates in any voting, but they have to pay 0.1 ETH for their vote request. One can vote only once per voting. Voting lasts 3 days, then any user can close it by request. Candidate with the highest number of votes (or first who gained it) gets 90% of accumulated voting bank and withdraws his prize. Owner withdraws 10% of bank as commission.
 
 #### 1) Hardhat tasks:
 |Command|Description|

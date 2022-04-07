@@ -6,15 +6,9 @@ contract Ballot {
     uint constant COMMISSION_PERCENT = 10;
     uint constant DURATION = 3 days;
 
-    struct User {
-        bool voted;
-
-        bool isCandidate;
-        uint scoredVotes;
-    }
-
     struct Voting {
-        mapping (address => User) users;
+        mapping (address => bool) voted;
+        mapping (address => uint) scoredVotes;
         address payable[] candidates;
         bool created;
         bool closed;
@@ -52,7 +46,10 @@ contract Ballot {
         require(voting.created == false, 'Voting already exists');
 
         for (uint i = 0; i < candidates_.length; i++) {
-            voting.users[candidates_[i]].isCandidate = true;
+            // this is also "candidate flag"
+            // user is candidate only if scoredVotes > 0
+            // number of real votes then = (scoredVotes-1)
+            voting.scoredVotes[candidates_[i]] ++;
         }
 
         voting.candidates = candidates_;
@@ -71,15 +68,17 @@ contract Ballot {
         require(voting.created, 'Voting not found');
         require(voting.closed == false, 'Voting already closed');
 
-        User storage sender = voting.users[msg.sender];
-        User storage candidate = voting.users[candidate_];
-        require(sender.voted == false, 'Sender already voted');
-        require(candidate.isCandidate == true, 'Receiver is not candidate');
+        uint scoredVotes = voting.scoredVotes[candidate_];
+        require(voting.voted[msg.sender] == false, 'Sender already voted');
+        require(scoredVotes > 0, 'Receiver is not candidate');
 
-        sender.voted = true;
-        candidate.scoredVotes ++;
-
+        voting.voted[msg.sender] = true;
+        voting.scoredVotes[candidate_] ++;
         voting.bank += PAYMENT;
+
+        if ((scoredVotes+1) > voting.scoredVotes[voting.winner]) {
+            voting.winner = payable(candidate_);
+        }
     }
 
     function closeVoting(string memory votingName) 
@@ -92,20 +91,13 @@ contract Ballot {
         require(block.timestamp > voting.endTime, 'Required time has not passed yet (3 days)');
 
         voting.closed = true;
-        uint maxVotes = 0;
 
-        for (uint i = 0; i < voting.candidates.length; i++) {
-            address payable current = voting.candidates[i];
-            uint scoredVotes = voting.users[current].scoredVotes;
-            if (scoredVotes > maxVotes) {
-                voting.winner = current;
-                maxVotes = scoredVotes;
-            }
+        uint bank = voting.bank;
+        if (bank > 0) {
+            uint commission = bank * COMMISSION_PERCENT/100;
+            pendingTxs[owner] += commission;
+            pendingTxs[voting.winner] += bank - commission;
         }
-
-        uint commission = voting.bank * COMMISSION_PERCENT/100;
-        pendingTxs[owner] += commission;
-        pendingTxs[voting.winner] += voting.bank - commission;
     }
 
     function withdraw() public {
@@ -123,9 +115,10 @@ contract Ballot {
     }
 
     function getVotingUserInfo(string memory votingName, address user_) public view returns (bool voted, bool isCandidate, uint scoredVotes) {
-        require(votings[votingName].created, 'Voting doesnt exist');
-        User storage user = votings[votingName].users[user_];
-        return (user.voted, user.isCandidate, user.scoredVotes);
+        Voting storage voting = votings[votingName];
+        require(voting.created, 'Voting doesnt exist');
+        uint votes = voting.scoredVotes[user_];
+        return (voting.voted[user_], votes > 0, (votes > 0 ? votes - 1 : 0));
     }
 
     function getVotingSummary(string memory votingName) public view returns (

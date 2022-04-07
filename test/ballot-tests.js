@@ -132,7 +132,7 @@ describe("Ballot", function () {
       const tx = await ballot.vote(title, first.address, { value : parseEther("0.5") });
       const txResult = await tx.wait();
 
-      expect((await ballot.getVotingSummary(title)).winner).to.equal(ethers.constants.AddressZero);
+      expect((await ballot.getVotingSummary(title)).winner).to.equal(first.address);
       expect(await ballot.getBalance(owner.address)).to.equal(0);
       expect(await ballot.getBalance(first.address)).to.equal(0);
     
@@ -140,7 +140,6 @@ describe("Ballot", function () {
       const closeTx = await ballot.closeVoting(title);
       await closeTx.wait();
 
-      expect((await ballot.getVotingSummary(title)).winner).to.equal(first.address);
       expect(await ballot.getBalance(owner.address)).to.equal(parseEther("0.01"));
       expect(await ballot.getBalance(first.address)).to.equal(parseEther("0.09"));
     });
